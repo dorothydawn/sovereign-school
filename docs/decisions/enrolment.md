@@ -51,6 +51,15 @@ rather than rejecting and leaving somebody who paid with nothing. The owner adds
 the mapping and the student's access appears, with no re-delivery needed from the
 funnel.
 
+That last part is not automatic goodwill: it is `reconcileUnmapped` in
+`src/lib/enrol/reconcile.ts`, which runs when a student's library loads and
+grants whatever the config now maps. Without it this paragraph would be a
+promise the code does not keep — which is exactly what it was until the
+behaviour was checked against a real database rather than assumed.
+
+It only looks at rows that still carry unmapped products, so it costs one cheap
+query in the normal case, and it never reinstates a grant that was revoked.
+
 Rejecting would be tidier and worse.
 
 ## What the thank-you page shows while enrolment is pending

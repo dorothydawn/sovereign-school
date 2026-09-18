@@ -21,7 +21,8 @@ export interface EnrolResult {
 
 const CLAIM_TOKEN_TTL_DAYS = 30
 
-function coursesFor(config: CourseConfig, productIds: string[]) {
+/** Which courses a set of product ids unlocks, and which ids map to nothing. */
+export function coursesFor(config: CourseConfig, productIds: readonly string[]) {
   const known = new Set(config.courses.map((c) => c.id))
   const granted = new Set<string>()
   const unmapped: string[] = []
