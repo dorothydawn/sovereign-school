@@ -12,6 +12,16 @@ export interface EnrolPayload {
   purchasedAt: string
 }
 
+/**
+ * Addresses are stored lowercase and trimmed, everywhere, from the moment they
+ * arrive. The funnel sends whatever the customer typed into a checkout, and
+ * `Student@Example.com` must be the same person as `student@example.com` — they
+ * certainly think they are.
+ */
+export function normaliseEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
 export type ParseResult =
   | { ok: true; payload: EnrolPayload }
   | { ok: false; reason: string }
@@ -57,7 +67,7 @@ export function parseEnrolPayload(body: unknown): ParseResult {
     ok: true,
     payload: {
       orderId,
-      email: email ?? null,
+      email: email === null ? null : normaliseEmail(email),
       productIds: productIds as string[],
       amountMinorUnits,
       currency,

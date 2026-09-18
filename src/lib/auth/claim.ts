@@ -1,5 +1,6 @@
 import type { SqlClient } from '@/lib/db/runner'
 import { hashToken } from '@/lib/enrol/signature'
+import { normaliseEmail } from '@/lib/enrol/payload'
 import { createSession } from './session'
 
 export type ClaimResult =
@@ -60,7 +61,7 @@ export async function claim(db: SqlClient, token: string): Promise<ClaimResult> 
         `INSERT INTO accounts (email) VALUES ($1)
          ON CONFLICT (email) DO UPDATE SET updated_at = now()
          RETURNING id, (xmax = 0) AS created`,
-        [enrolment.email],
+        [normaliseEmail(enrolment.email)],
       )
       const account = upserted[0]
       if (!account) throw new Error('Account upsert returned no row')
