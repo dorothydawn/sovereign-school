@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import './globals.css'
 import courseConfig from '../../course.config'
 
 export const metadata = {
