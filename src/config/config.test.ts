@@ -29,3 +29,18 @@ describe('course.config.ts', () => {
     expect(courseConfig.site.url).not.toMatch(/\/$/)
   })
 })
+
+describe('alerts', () => {
+  it('warns before the ceiling, not at it', () => {
+    for (const t of courseConfig.alerts.thresholds) {
+      expect(t).toBeGreaterThan(0)
+      expect(t).toBeLessThan(100)
+    }
+  })
+
+  it('has at least one threshold if anything is being watched', () => {
+    const watching =
+      courseConfig.alerts.watchDatabaseUsage || courseConfig.alerts.watchEmailQuota
+    if (watching) expect(courseConfig.alerts.thresholds.length).toBeGreaterThan(0)
+  })
+})

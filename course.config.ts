@@ -36,6 +36,32 @@ export const courseConfig: CourseConfig = {
   },
 
   /**
+   * Who sends your emails. Gmail is free and takes five minutes; it sends 100 a
+   * day, which is fine until launch day. `docs/choosing-an-email-sender.md`
+   * explains when that stops being enough and what it costs to fix (about $20).
+   *
+   * Credentials go in environment variables, never here.
+   */
+  email: {
+    provider: 'gmail',
+    from: 'hello@example.com',
+  },
+
+  /**
+   * Free tiers can run out, and some providers switch off without telling you.
+   * Neon's free plan suspends your database with no warning at all. The platform
+   * watches instead, and emails you before you get there.
+   *
+   * Turning these off is not recommended. The first you would know is a student
+   * telling you your course is broken.
+   */
+  alerts: {
+    thresholds: [70, 90],
+    watchDatabaseUsage: true,
+    watchEmailQuota: true,
+  },
+
+  /**
    * Comments sit under each lesson. They are worth having on: students tell you
    * which lesson landed, and what they write is often the most honest
    * testimonial you will ever get.

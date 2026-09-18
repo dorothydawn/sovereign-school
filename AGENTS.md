@@ -49,6 +49,40 @@ When you genuinely need something new, say what it costs before you add it.
 `course.config.ts`, not in the code.** This repo gets resold. Anything you
 hardcode is something a future buyer has to hunt for.
 
+## Prices go stale, and quoting a wrong one does real damage
+
+This repository quotes prices to help the owner choose a video host, a database
+plan and an email sender. **Every one of those prices is in
+`docs/pricing/README.md` with the date it was last verified.**
+
+Before you quote any figure, check that date.
+
+- **Under 90 days** — use it, and say when it was checked.
+- **Over 90 days** — fetch the source and confirm it before advising anybody.
+  Update the table and the docs that cite it.
+- **Never quote a price from memory.** You do not reliably know today's date
+  relative to what you were trained on, and a provider's free tier may have
+  changed since. Look it up or say you have not.
+
+If a price has moved enough to change the advice — a free tier shrinking, a
+cheap provider getting expensive — **tell the owner.** They may have picked that
+provider because of the old number. Do not quietly edit the table under them.
+
+A good moment to re-check everything is whenever the owner is about to make a
+decision that costs money, or before a launch.
+
+## Free tiers must never fail silently
+
+The product's promise is that it runs on free tiers. That promise is only honest
+if the owner hears about a ceiling before their students do.
+
+Neon's free plan suspends the database when its monthly compute runs out, and
+does not warn anyone. Email providers stop sending at a daily cap. If you add
+anything with a free-tier limit that can stop the product working, **it needs a
+warning path to the owner**, the same as the existing ones.
+
+See `docs/decisions/never-fail-silently.md`.
+
 ## Working here
 
 - `npm run check` — typecheck, lint, tests. Must pass before you tell anyone

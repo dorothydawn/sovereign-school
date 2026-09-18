@@ -35,7 +35,13 @@ two that cost money:
 
 - [Where your videos live](./docs/choosing-a-video-host.md) — from free upwards
 - [Which database plan](./docs/choosing-a-neon-plan.md) — free is realistic for
-  most people
+  most people, paid is about $5–20/month
+- [How your emails get sent](./docs/choosing-an-email-sender.md) — free until
+  you are selling a lot
+
+Every price quoted in these docs is listed in
+[`docs/pricing`](./docs/pricing/README.md) with the date it was checked, so you
+can tell how much to trust it.
 
 Everything else you configure lives in one file:
 [`course.config.ts`](./course.config.ts).

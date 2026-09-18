@@ -1,77 +1,99 @@
 # Choosing your database plan
 
-Your database stores accounts, who bought what, progress, and comments. It does
+Your database stores accounts, who bought what, progress and comments. It does
 **not** store video, so it stays small. This platform uses [Neon](https://neon.com),
-a Postgres host with a free plan that is genuinely free — no card, no trial
-period.
+a Postgres host whose free plan is genuinely free — no card, no trial period.
 
-Most people reading this should start on the free plan. This page is here so you
-can tell whether you are one of the people who shouldn't.
+There are two plans worth considering, and the honest summary is: **Free is real,
+but it can switch your site off, and Neon will not warn you. Launch costs about
+$5–20/month and will.**
 
-## What free actually gets you
+## Side by side
 
-| | Free | Launch (the next one up) |
+| | Free | Launch |
 |---|---|---|
-| **Cost** | $0 | Pay per use, roughly $5–25/mo at course scale |
-| **Storage** | 0.5 GB | Unlimited, $0.35/GB-month |
-| **Compute** | 100 CU-hours/month | Unmetered, $0.106/CU-hour |
-| **Sleeps when idle** | Yes, after 5 min | Yes, configurable |
-| **If you run out** | **Database suspends until next month** | You get a bill |
+| **Monthly fee** | $0 | **$0 — there is no monthly fee** |
+| **What you pay** | Nothing | $0.106 per CU-hour, $0.35/GB-month |
+| **Realistic cost for a course** | $0 | **$5–20/month** |
+| **Storage** | 0.5 GB | Unlimited |
+| **Compute** | 100 CU-hours/month | Unmetered |
+| **If you run out** | **Suspends until next month** | You get a bill |
+| **Warns you first** | **No** | Yes — spending alerts |
 
-Two numbers matter, and only one of them is likely to bite you.
+The thing most people get wrong about Launch: **it has no minimum fee.** It is
+not $19/month. You pay for what you use, and a sleepy course database uses very
+little. If nobody visits, you pay almost nothing.
 
-**Storage: not your problem.** 5,000 students across 20 lessons is about **8 MB**
-of progress data. Add accounts and comments and you are still comfortably under
-50 MB, against a 500 MB limit. You would need to be very successful indeed, for
-years, to fill it.
+## What you would actually pay on Launch
 
-**Compute: this is the one to watch.** Neon bills for time your database is
-*awake*. It falls asleep after five minutes of nobody using it and wakes up
-instantly when somebody arrives. The free plan gives you 100 CU-hours a month,
-which at the free plan's size works out to roughly **400 hours of being awake**,
-out of about 730 hours in a month.
+Neon bills for time your database is *awake*. It sleeps after five minutes of
+nobody using it and wakes instantly when somebody arrives.
 
-So the real question is not how many students you have. **It is how spread out
-they are.**
+| How busy your course is | Awake per month | Cost |
+|---|---|---|
+| Quiet — a few students, one timezone | ~200 hours | **~$5** |
+| Steady — regular traffic most days | ~400 hours | **~$11** |
+| Busy — someone on the site nearly always | ~730 hours | **~$19** |
 
-- 500 students who all watch on a Tuesday evening → barely any awake time → free
-  plan is fine.
-- 500 students scattered across every timezone, dipping in at all hours → the
-  database rarely gets five quiet minutes → it stays awake → you may run out.
+Storage adds pennies. 5,000 students across 20 lessons is about 8 MB.
 
-## The part worth knowing before you choose
+That top row is the worst case: a site being used around the clock, which means
+it is working.
 
-If you exhaust the free compute allowance, **your database suspends until the
-next billing cycle**. Not slower. Off. Your students see errors and your course
-is down, potentially for weeks.
+## The part you should know before choosing Free
 
-Nothing is deleted, and upgrading restores it immediately — but if it happens
-mid-launch, it happens at the worst possible moment and you may not be watching.
+If a Free project uses up its 100 CU-hours, **the database suspends until the
+next billing cycle.** Not slower. Off. Students see errors and cannot get into
+something they paid for.
 
-## How to decide
+Nothing is deleted and upgrading fixes it within a minute — but **Neon's own
+spending notifications are a Launch and Scale feature.** On Free, you are not
+told you are close, and you are not told when it happens.
 
-**Start on Free if:**
-- You are launching to a list of a few hundred or fewer, or
-- Your audience is concentrated in one or two timezones, or
-- You are still building and have no students yet — which is almost everyone
-  reading this on day one.
+We think that is unacceptable in a product people are selling from, so **this
+platform watches it for you** — see below. But the warning we can give you is an
+estimate, and Launch gives you the real thing from Neon directly.
 
-**Start on Launch if:**
-- You are launching to a large audience at once (a big list, a big following),
-  or
-- Your students are spread worldwide, or
-- The course going down for a week would cost you more than $25 would.
+## So the free plan is fine when
 
-**Switch from Free to Launch when:** Neon's dashboard shows you past about 70% of
-your compute allowance before the month is out. Check it in week one of a launch,
-then monthly. Upgrading takes a click and no migration.
+- You are still setting up, with no students — everyone, on day one
+- Your audience is a few hundred and concentrated in one or two timezones
+- You would notice quickly and do not mind fixing it
 
-Set it up in `docs/setup.md`. The platform behaves identically either way — the
-plan is a billing setting on Neon's side, not something this code knows about.
+## And you want Launch when
 
-## If you would rather not use Neon at all
+- You are launching to a large list at once
+- Your students are spread across the world, so the database rarely gets five
+  quiet minutes
+- The site going down for a week would cost you more than $20
+- You would rather pay $5 than watch a dashboard
 
-Anything that speaks Postgres will work: Supabase, Railway, a Postgres server you
-run yourself. Change `DATABASE_URL` and the platform will not notice the
-difference. Neon is the default in the docs because its free plan is the most
-generous and it sleeps when idle, which is what makes $0 realistic.
+There is no migration either way. Upgrading is a click, takes effect
+immediately, and nothing in this code changes.
+
+## How the platform warns you
+
+Because Neon will not do this on the Free plan, the platform estimates it:
+
+- Your owner dashboard shows estimated compute used this month, as a percentage
+- You get an email at **70%** and again at **90%**
+- The warning says what will happen, and that upgrading takes one click
+
+**This is an estimate, not Neon's number.** We measure how long the database is
+awake and work backwards; we cannot read Neon's meter on the Free plan, because
+the API that reports it is not available there. Expect it to be roughly right and
+to err on the cautious side. On Launch, the platform reads the real figure from
+Neon instead.
+
+You will not be silently switched off. That was a deliberate requirement.
+
+## If you would rather not use Neon
+
+Anything that speaks Postgres works: Supabase, Railway, a server you run
+yourself. Change `DATABASE_URL`. Neon is the default because its free plan is the
+most generous and it sleeps when idle, which is what makes $0 realistic.
+
+---
+
+*Prices last checked 2026-09-18. See [pricing](./pricing/README.md) — if that was
+a while ago, check before relying on it.*
