@@ -59,6 +59,34 @@ The claim URL, as soon as it exists. If enrolment has not completed, the page
 says access is being set up and that an email is coming — never a bare error,
 because from the customer's side nothing has gone wrong. They paid.
 
+## One live claim link per purchase, enforced by the database
+
+The endpoint must not issue a second claim link on a repeat delivery: the first
+may already be in the customer's hands, and a second would quietly invalidate
+the one they are looking at.
+
+The obvious implementation — look for an existing token, insert one if there is
+none — **is wrong, and its tests pass.** Sequential duplicate deliveries behave
+perfectly. Simultaneous ones do not: every request checks before any insert
+lands, all of them find nothing, and all of them insert.
+
+Fired at a real server, eight simultaneous deliveries of one order produced one
+enrolment, one access grant, and **eight working links into the same account**.
+
+Checking harder cannot fix a read-then-write race. A partial unique index on
+`claim_tokens (enrolment_id) WHERE used_at IS NULL` can, and does: whoever loses
+the race inserts nothing and returns `null`, which is the same answer a repeat
+delivery already gets. Twelve simultaneous deliveries now produce exactly one
+link and twelve `200`s.
+
+The index is partial so that a used token remains as a record, and a student who
+claimed months ago and needs a fresh link is still a normal case.
+
+**The general lesson, which applies to the rest of this endpoint:** anything that
+must be true exactly once belongs in a constraint, not in application logic. The
+funnel delivers from two racing sources by design, so concurrent delivery is the
+normal case here rather than an edge case.
+
 ## Refunds
 
 Not this endpoint. A separate one with the same idempotency discipline. See

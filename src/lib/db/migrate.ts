@@ -24,8 +24,8 @@ async function main(): Promise<void> {
     async exec(statement: string) {
       await sql.unsafe(statement)
     },
-    async rows<T>(statement: string) {
-      return (await sql.unsafe(statement)) as unknown as T[]
+    async rows<T>(statement: string, params: readonly unknown[] = []) {
+      return (await sql.unsafe(statement, params as never[])) as unknown as T[]
     },
   }
 

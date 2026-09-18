@@ -7,8 +7,16 @@ import { join } from 'node:path'
  * exercise the migrations you actually ship, not a reimplementation of them.
  */
 export interface SqlClient {
+  /** Runs SQL with no parameters. For migrations and fixed statements only. */
   exec(sql: string): Promise<void>
-  rows<T>(sql: string): Promise<T[]>
+  /**
+   * Runs SQL with `$1`-style parameters and returns the rows.
+   *
+   * Anything derived from an HTTP request MUST arrive as a parameter. The enrol
+   * endpoint takes an order id and an email straight from the network, and
+   * interpolating either into SQL is how a stranger reads your accounts table.
+   */
+  rows<T>(sql: string, params?: readonly unknown[]): Promise<T[]>
 }
 
 export interface AppliedMigration {

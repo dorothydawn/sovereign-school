@@ -10,8 +10,8 @@ export function pgliteClient(db: PGlite): SqlClient {
     async exec(sql: string) {
       await db.exec(sql)
     },
-    async rows<T>(sql: string) {
-      const result = await db.query<T>(sql)
+    async rows<T>(sql: string, params: readonly unknown[] = []) {
+      const result = await db.query<T>(sql, [...params])
       return result.rows
     },
   }
