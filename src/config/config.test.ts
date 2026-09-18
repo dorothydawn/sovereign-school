@@ -1,0 +1,31 @@
+import { describe, expect, it } from 'vitest'
+import courseConfig from '../../course.config'
+
+/**
+ * These check the config a buyer edits by hand. A typo here is the most likely
+ * way somebody breaks their own deployment, and the failure it would otherwise
+ * cause — a student who paid seeing no course — is the worst one we have.
+ */
+describe('course.config.ts', () => {
+  it('gives every course a unique id', () => {
+    const ids = courseConfig.courses.map((c) => c.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('maps every product onto courses that exist', () => {
+    const known = new Set(courseConfig.courses.map((c) => c.id))
+    for (const [productId, courseIds] of Object.entries(courseConfig.productToCourses)) {
+      for (const courseId of courseIds) {
+        expect(known, `product "${productId}" unlocks unknown course "${courseId}"`).toContain(courseId)
+      }
+    }
+  })
+
+  it('leaves at least one way for a student to sign in', () => {
+    expect(courseConfig.auth.magicLink || courseConfig.auth.password).toBe(true)
+  })
+
+  it('has a site url with no trailing slash, since sign-in links are built from it', () => {
+    expect(courseConfig.site.url).not.toMatch(/\/$/)
+  })
+})

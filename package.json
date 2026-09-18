@@ -1,0 +1,35 @@
+{
+  "name": "sovereign-school",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A self-hosted course platform template. Runs on your accounts, not ours.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "migrate": "tsx src/lib/db/migrate.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.5",
+    "next": "^15.5.4",
+    "postgres": "^3.4.7",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.5",
+    "@eslint/eslintrc": "^3.3.7",
+    "@types/node": "^22.18.1",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "eslint": "^9.36.0",
+    "eslint-config-next": "^15.5.4",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

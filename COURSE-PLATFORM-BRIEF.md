@@ -129,7 +129,9 @@ repeat it. Out of scope until somebody asks:
 
 - Payments of any kind. **The funnel does that.** This platform never touches Stripe
 - Certificates, badges, gamification, streaks
-- Discussion forums, comments, community
+- Discussion forums and a community layer. **Comments under lessons are now IN scope**
+  and are being built — see `docs/decisions/comments.md`. A community layer is a
+  separate product
 - A drag-and-drop course builder. Content is files in the repo, edited by an agent —
   same as the funnel kit's `content/` directory, and the same pitch
 - Multi-tenancy. One buyer, one deployment, one course library. That is the product
@@ -139,6 +141,11 @@ repeat it. Out of scope until somebody asks:
 ---
 
 ## 5. Decisions the owner needs to make, not you
+
+> **Status, September 2026.** These have now been answered. The answers and their
+> reasoning live in `docs/decisions/`. Question 2 is deliberately still open and
+> is built for but switched off. Kept below for the record.
+
 
 Put these back as questions rather than guessing:
 
