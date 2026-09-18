@@ -51,7 +51,14 @@ confirm on Vimeo's pricing page before deciding.
 | Provider | Price | Last checked | Source | Used in |
 |---|---|---|---|---|
 | Neon Free | $0 — 100 CU-hours/mo, 0.5 GB storage, per project | 2026-09-18 | [neon.com/pricing](https://neon.com/pricing) | `choosing-a-neon-plan.md` |
-| Neon Launch | No monthly fee. $0.106/CU-hour, $0.35/GB-month | 2026-09-18 | [Neon plans](https://neon.com/docs/introduction/plans) | `choosing-a-neon-plan.md` |
+| Neon Launch | **No monthly fee, no minimum.** $0.106/CU-hour, $0.35/GB-month | 2026-09-18 | [neon.com/pricing](https://neon.com/pricing) | `choosing-a-neon-plan.md` |
+| Neon Scale | No monthly fee. $0.222/CU-hour — dearer than Launch | 2026-09-18 | [neon.com/pricing](https://neon.com/pricing) | `choosing-a-neon-plan.md` |
+
+**Watch out for a stale "$5/month minimum" on Neon Launch.** That minimum was
+removed in December 2025, but many comparison articles and blog posts still
+quote it, and a search will surface them. Verified twice against Neon's own
+pricing page on 2026-09-18: there is no minimum on Launch or Scale. Do not
+"correct" this back to $5 on the strength of a third-party page.
 
 ## Email
 

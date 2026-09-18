@@ -26,19 +26,37 @@ little. If nobody visits, you pay almost nothing.
 
 ## What you would actually pay on Launch
 
-Neon bills for time your database is *awake*. It sleeps after five minutes of
-nobody using it and wakes instantly when somebody arrives.
+You are billed for two things, and only one of them matters.
+
+**Compute** — the time your database is *awake*. It sleeps after five minutes of
+nobody using it and wakes instantly when somebody arrives. $0.106 per CU-hour.
+
+**Storage** — $0.35/GB-month. Ignore it. 5,000 students across 20 lessons is
+about 8 MB, which rounds to nothing. Even a full gigabyte would be 34 cents.
+
+So it comes down to how much of the month your database is awake:
 
 | How busy your course is | Awake per month | Cost |
 |---|---|---|
+| Very quiet — a handful of students | ~100 hours | **~$3** |
 | Quiet — a few students, one timezone | ~200 hours | **~$5** |
 | Steady — regular traffic most days | ~400 hours | **~$11** |
 | Busy — someone on the site nearly always | ~730 hours | **~$19** |
 
-Storage adds pennies. 5,000 students across 20 lessons is about 8 MB.
+**Realistic bill: $3–8/month while you are small, $10–20 once you are busy.**
 
-That top row is the worst case: a site being used around the clock, which means
-it is working.
+Two honest caveats. Your database **autoscales** — those figures assume it stays
+at its smallest size, which is where this kind of workload sits nearly always,
+but a genuine hammering scales it up and costs more for as long as it lasts. And
+the tier above Launch, called Scale, is **more** expensive per hour, not less
+($0.222/CU-hour). You would move there for features like private networking,
+never to save money. A course platform stays on Launch indefinitely.
+
+## You may see a "$5 minimum" elsewhere — it is out of date
+
+Neon used to charge a $5/month minimum on Launch. **It was removed in December
+2025.** A lot of comparison articles still quote it. If you use $3 of resources,
+you are billed $3.
 
 ## The part you should know before choosing Free
 
