@@ -110,6 +110,26 @@ that agrees with you, and go and check it:
 If you have not done that, say "the tests pass" — which is true — rather than
 "it works", which you do not know yet.
 
+## Where PGlite and real Postgres disagree
+
+Tests run against PGlite, which is real Postgres compiled to WebAssembly, so it
+is a genuinely good stand-in. It is not identical, and the differences are the
+kind that pass in tests and fail in production.
+
+The one found so far, verified against Postgres 16 on 2026-09-18:
+
+| | `SELECT count(*)` | `SELECT count(*)::int` |
+|---|---|---|
+| Real Postgres | `"0"` — a **string** | `0` — a number |
+| PGlite | `0` — a number | `0` — a number |
+
+Postgres returns `bigint` as a string to avoid losing precision; PGlite does not.
+So `count(*)` compared against a number passes in tests and fails in production.
+**Cast aggregates explicitly** — `count(*)::int` behaves the same in both.
+
+When you find another divergence, add it here rather than only fixing the call
+site. The next person will hit the same thing.
+
 ## The bit that is easy to get wrong
 
 Students arrive here because they **already paid**, somewhere else. The funnel
