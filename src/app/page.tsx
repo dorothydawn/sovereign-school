@@ -5,6 +5,8 @@ import courseConfig from '../../course.config'
 import { getDb } from '@/lib/db/client'
 import { SESSION_COOKIE, resolveSession } from '@/lib/auth/session'
 import { accessibleCourses } from '@/lib/auth/access'
+import { isOwner } from '@/lib/auth/owner'
+import { countPending } from '@/lib/comments/comments'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +24,8 @@ export default async function LibraryPage() {
   if (!session) redirect('/signin')
 
   const courses = await accessibleCourses(db, courseConfig, session.accountId)
+  const owner = await isOwner(db, session.accountId)
+  const waiting = owner ? await countPending(db) : 0
 
   return (
     <main style={{ maxWidth: '40rem', margin: '3rem auto', padding: '0 1rem' }}>
@@ -50,6 +54,13 @@ export default async function LibraryPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {owner && (
+        <p className="notice">
+          <Link href="/owner">Things to look at</Link>
+          {waiting > 0 && ` — ${waiting} comment${waiting === 1 ? '' : 's'} waiting`}
+        </p>
       )}
 
       <form method="post" action="/api/auth/signout" style={{ marginTop: '3rem' }}>

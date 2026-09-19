@@ -10,15 +10,21 @@ import { courseProgress, percentComplete } from '@/lib/progress/progress'
 import { videoEmbed } from '@/lib/video/embed'
 import { LessonPlayer } from '@/components/LessonPlayer'
 import { CompleteButton } from '@/components/CompleteButton'
+import { Comments } from '@/components/Comments'
+import { commentSettings, lessonComments } from '@/lib/comments/comments'
+import { isOwner } from '@/lib/auth/owner'
 
 export const dynamic = 'force-dynamic'
 
 export default async function LessonPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseId: string; lessonId: string }>
+  searchParams: Promise<{ comment?: string }>
 }) {
   const { courseId, lessonId } = await params
+  const { comment: commentNotice } = await searchParams
   const store = await cookies()
   const db = getDb()
 
@@ -40,6 +46,12 @@ export default async function LessonPage({
   const percent = percentComplete(progress, lessons.map((l) => l.id))
   const next = nextLesson(lessons, lesson.id)
   const state = progress.get(lesson.id)
+
+  const comments = commentSettings(courseConfig, courseId)
+  const owner = comments.enabled ? await isOwner(db, session.accountId) : false
+  const thread = comments.enabled
+    ? await lessonComments(db, courseId, lesson.id, { accountId: session.accountId, isOwner: owner })
+    : []
 
   return (
     <div className="shell">
@@ -111,6 +123,22 @@ export default async function LessonPage({
             lessonId={lesson.id}
             completed={state?.completed ?? false}
             nextHref={next ? `/course/${courseId}/${next.id}` : null}
+          />
+        )}
+
+        {comments.enabled && (
+          <Comments
+            comments={thread}
+            courseId={courseId}
+            lessonId={lesson.id}
+            accountId={session.accountId}
+            isOwner={owner}
+            allowReplies={comments.allowReplies}
+            notice={
+              commentNotice === 'pending' || commentNotice === 'problem'
+                ? commentNotice
+                : undefined
+            }
           />
         )}
       </main>

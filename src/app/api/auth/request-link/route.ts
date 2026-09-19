@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import courseConfig from '../../../../../course.config'
 import { getDb } from '@/lib/db/client'
 import { requestSignInLink } from '@/lib/auth/signin'
+import { ensureOwnerAccount } from '@/lib/auth/owner'
 import { signInEmail } from '@/lib/auth/emails'
 import { dailyQuotaWarning, sendEmail } from '@/lib/email/send'
 
@@ -17,6 +18,12 @@ export async function POST(request: Request): Promise<Response> {
 
   if (typeof email === 'string' && email.includes('@')) {
     const db = getDb()
+
+    // The owner has usually bought nothing, so no purchase ever made them an
+    // account. This creates one for the exact address in OWNER_EMAIL and no
+    // other, the first time they ask to sign in.
+    await ensureOwnerAccount(db, email)
+
     const issued = await requestSignInLink(db, email)
 
     if (issued) {
