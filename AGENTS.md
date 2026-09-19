@@ -49,6 +49,30 @@ When you genuinely need something new, say what it costs before you add it.
 `course.config.ts`, not in the code.** This repo gets resold. Anything you
 hardcode is something a future buyer has to hunt for.
 
+## Settings live in two places, and the split matters
+
+`course.config.ts` holds everything the owner chooses and nothing secret. It is
+committed to their repository and they will share that repository with you.
+
+**Secrets are environment variables.** Never write one into `course.config.ts`,
+a lesson, or a commit — not even briefly, not even in a branch. If you need to
+show an owner what to set, name the variable and let them paste the value into
+their host.
+
+Two are easy to miss because nothing obviously breaks without them:
+
+- **`OWNER_EMAIL`** decides which account is the owner's. Unset means nobody is,
+  so `/owner` returns 404 for everybody and no free-tier warnings are sent. It is
+  in `docs/setup.md` step 5.
+- **`SESSION_SECRET`** keys the hashing of session, claim and sign-in tokens.
+  Changing it signs everybody out and invalidates unused links, so it is set once
+  at setup and left alone. In production, an unset value throws rather than
+  silently falling back.
+
+`docs/setup.md` lists every variable the code reads. When you add one, add it
+there in the same change — a variable that exists only in the code is one the
+buyer will never set.
+
 ## Prices go stale, and quoting a wrong one does real damage
 
 This repository quotes prices to help the owner choose a video host, a database

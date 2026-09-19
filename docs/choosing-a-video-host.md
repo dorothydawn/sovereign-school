@@ -79,6 +79,32 @@ courses: [
 
 Different courses can use different hosts. You are not locked in.
 
+## What each host needs from you
+
+Credentials go in your environment variables, never in `course.config.ts` — that
+file is committed to your repository.
+
+| Host | Set these | If you leave them out |
+|---|---|---|
+| **YouTube** | Nothing | — |
+| **Vimeo** | Nothing | — |
+| **Loom** | Nothing | — |
+| **Bunny** | `BUNNY_LIBRARY_ID`, `BUNNY_TOKEN_KEY` | Without the library id, no video plays and the page says so. Without the token key it plays, but the link can be shared |
+| **Mux** | `MUX_SIGNING_KEY_ID`, `MUX_SIGNING_PRIVATE_KEY` | It plays from a public playback id, which anyone can share |
+| **Cloudflare Stream** | `CLOUDFLARE_STREAM_CUSTOMER_CODE` | No video plays, and the page says which value is missing |
+| **Custom embed** | Nothing | The lesson supplies the whole `https://` URL |
+
+Two of these are worth saying plainly.
+
+**Vimeo's protection is a setting you switch on, not something this platform can
+do for you.** The code cannot see whether you have enabled domain-level privacy.
+Turn it on in Vimeo, add your site's domain, and check a lesson still plays
+afterwards.
+
+**Bunny and Mux fall back to unprotected rather than refusing to play.** A lesson
+with a missing signing key still works — it is simply shareable. If you chose
+those hosts for the protection, set the keys.
+
 ## Prices change
 
 These were checked in September 2026. Providers change pricing; if you are
