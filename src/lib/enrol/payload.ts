@@ -7,6 +7,11 @@ export interface EnrolPayload {
   /** May be null. The funnel does not require an email to take a payment. */
   email: string | null
   productIds: string[]
+  /**
+   * What the customer paid. Validated so a funnel sending nonsense is caught,
+   * then deliberately discarded — see migration 0006. The funnel and Stripe are
+   * the record of money; this platform only decides who may watch what.
+   */
   amountMinorUnits: number
   currency: string
   purchasedAt: string

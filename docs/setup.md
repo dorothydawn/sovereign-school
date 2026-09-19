@@ -9,7 +9,7 @@ free tier that is enough to start.
 | What | What it does | Cost to start |
 |---|---|---|
 | **GitHub** | Holds your copy of the code | Free |
-| **Vercel** | Runs the website | Free |
+| **Vercel** | Runs the website | **$20/month — see below** |
 | **Neon** | Stores accounts, progress and comments | Free |
 | **A video host** | Holds your lessons | Free, or from $12/mo |
 

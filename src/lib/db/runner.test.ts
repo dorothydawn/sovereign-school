@@ -42,8 +42,8 @@ describe('the schema the migrations actually produce', () => {
     // Without this constraint the same customer is enrolled repeatedly.
     const insert = (order: string) =>
       db.query(
-        `INSERT INTO enrolments (order_id, product_ids, amount_minor_units, currency, purchased_at)
-         VALUES ('${order}', ARRAY['course-x'], 29700, 'usd', now())`,
+        `INSERT INTO enrolments (order_id, product_ids, purchased_at)
+         VALUES ('${order}', ARRAY['course-x'], now())`,
       )
 
     await insert('ord_1')
@@ -53,8 +53,8 @@ describe('the schema the migrations actually produce', () => {
   it('accepts an enrolment with no email at all', async () => {
     // The funnel does not require an email to take payment.
     await db.query(
-      `INSERT INTO enrolments (order_id, email, product_ids, amount_minor_units, currency, purchased_at)
-       VALUES ('ord_2', NULL, ARRAY['course-x'], 29700, 'usd', now())`,
+      `INSERT INTO enrolments (order_id, email, product_ids, purchased_at)
+       VALUES ('ord_2', NULL, ARRAY['course-x'], now())`,
     )
     const rows = await db.query<{ email: string | null }>(
       `SELECT email FROM enrolments WHERE order_id = 'ord_2'`,
@@ -84,8 +84,8 @@ describe('the schema the migrations actually produce', () => {
 
   it('can revoke access without deleting the record of the purchase', async () => {
     await db.query(
-      `INSERT INTO enrolments (id, order_id, product_ids, amount_minor_units, currency, purchased_at)
-       VALUES ('11111111-1111-1111-1111-111111111111', 'ord_3', ARRAY['course-x'], 29700, 'usd', now())`,
+      `INSERT INTO enrolments (id, order_id, product_ids, purchased_at)
+       VALUES ('11111111-1111-1111-1111-111111111111', 'ord_3', ARRAY['course-x'], now())`,
     )
     await db.query(
       `INSERT INTO course_access (enrolment_id, course_id)
@@ -107,8 +107,8 @@ describe('the schema the migrations actually produce', () => {
 
   it('rejects an access state that is neither active nor revoked', async () => {
     await db.query(
-      `INSERT INTO enrolments (id, order_id, product_ids, amount_minor_units, currency, purchased_at)
-       VALUES ('22222222-2222-2222-2222-222222222222', 'ord_4', ARRAY['c'], 1, 'usd', now())`,
+      `INSERT INTO enrolments (id, order_id, product_ids, purchased_at)
+       VALUES ('22222222-2222-2222-2222-222222222222', 'ord_4', ARRAY['c'], now())`,
     )
     await expect(
       db.query(

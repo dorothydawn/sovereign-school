@@ -65,11 +65,13 @@ export async function enrol(
   // ON CONFLICT makes the insert an upsert keyed on the funnel's order id. The
   // xmax test tells us whether this row already existed: 0 means freshly
   // inserted, non-zero means the conflict path updated it.
+  // The amount and currency arrive on every call and are deliberately not
+  // stored: the funnel and Stripe are the record of what somebody paid, and a
+  // platform that never takes money should not hold a third copy of it.
   const rows = await db.rows<{ id: string; existed: boolean }>(
     `INSERT INTO enrolments
-       (order_id, email, product_ids, unmapped_products,
-        amount_minor_units, currency, purchased_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (order_id, email, product_ids, unmapped_products, purchased_at)
+     VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (order_id) DO UPDATE
        SET email             = COALESCE(EXCLUDED.email, enrolments.email),
            unmapped_products = EXCLUDED.unmapped_products,
@@ -80,8 +82,6 @@ export async function enrol(
       payload.email,
       payload.productIds,
       unmappedProductIds,
-      payload.amountMinorUnits,
-      payload.currency,
       payload.purchasedAt,
     ],
   )

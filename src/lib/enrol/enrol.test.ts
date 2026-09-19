@@ -5,7 +5,7 @@ import { pgliteClient } from '@/lib/db/pglite'
 import { runMigrations, type SqlClient } from '@/lib/db/runner'
 import type { CourseConfig } from '@/config/types'
 import { enrol } from './enrol'
-import type { EnrolPayload } from './payload'
+import { parseEnrolPayload, type EnrolPayload } from './payload'
 
 let db: PGlite
 let client: SqlClient
@@ -195,5 +195,40 @@ describe('the database itself, not the application, enforces one live claim link
         [first.enrolmentId],
       ),
     ).resolves.toBeDefined()
+  })
+})
+
+describe('what a customer paid', () => {
+  it('is accepted and validated, so a broken funnel is still caught', async () => {
+    const bad = parseEnrolPayload({
+      ...payload(),
+      amountMinorUnits: 'not a number',
+    })
+    expect(bad.ok).toBe(false)
+  })
+
+  it('is never written to the database', async () => {
+    // This platform does not take money. The funnel and Stripe are the record
+    // of what somebody paid, and a third copy here is data that could only ever
+    // leak. See migration 0006.
+    await enrol(client, config, payload())
+
+    const columns = await client.rows<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'enrolments'`,
+    )
+    const names = columns.map((c) => c.column_name)
+    expect(names).not.toContain('amount_minor_units')
+    expect(names).not.toContain('currency')
+  })
+
+  it('holds nothing financial anywhere in the schema', async () => {
+    const columns = await client.rows<{ table_name: string; column_name: string }>(
+      `SELECT table_name, column_name FROM information_schema.columns
+        WHERE table_schema = 'public'`,
+    )
+    const financial = columns.filter((c) =>
+      /amount|currency|price|cost|paid|charge/i.test(c.column_name),
+    )
+    expect(financial).toEqual([])
   })
 })

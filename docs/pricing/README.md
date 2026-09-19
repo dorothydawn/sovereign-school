@@ -73,5 +73,13 @@ pricing page on 2026-09-18: there is no minimum on Launch or Scale. Do not
 
 | Provider | Price | Last checked | Source | Used in |
 |---|---|---|---|---|
-| Vercel Hobby | $0 — 100 GB transfer/mo | 2026-09-18 | [vercel.com/docs/pricing](https://vercel.com/docs/pricing) | `setup.md` |
-| Vercel Pro | $20/mo/seat, transfer $0.15/GB on demand | 2026-09-18 | [Vercel regional pricing](https://vercel.com/docs/pricing/regional-pricing) | `setup.md` |
+| Vercel Hobby | $0 — **non-commercial use only, not usable for selling courses** | 2026-09-19 | [Fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines) | `setup.md`, `README.md` |
+| Vercel Pro | **$20/mo/seat — required for any commercial site**, transfer $0.15/GB on demand | 2026-09-19 | [Fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines) | `setup.md`, `README.md` |
+
+**Vercel Hobby cannot be used to sell anything.** Verified 2026-09-19 against
+Vercel's fair use guidelines: "Hobby teams are restricted to non-commercial
+personal use only. All commercial usage of the platform requires either a Pro or
+Enterprise plan," where commercial explicitly includes "advertising the sale of
+a product or service." The docs said free hosting until this was checked. If you
+are re-verifying prices, check whether this rule still stands — it is the single
+largest running cost the buyer has.

@@ -11,24 +11,59 @@ coding agent change it — as much as you like.
 
 ---
 
-## What it costs to run
+## What it actually costs
 
-A real course: 20 lessons of 15 minutes, sold to 200 students.
+No subscription to this software, and no cut of what you sell — **nothing you
+pay goes to us.** The accounts are yours, in your name, and the bills come from
+the companies providing the service.
 
-| | Typical cost |
-|---|---|
-| Hosting (Vercel) | **$0** — the free plan is enough |
-| Database (Neon) | **$0**, or about $5–20/month if you would rather have headroom |
-| Video | **$0** on YouTube, or from $12/month somewhere private |
-| Emails | **$0** up to roughly 100 a day, then $20/month |
-| This software | **$0**, now and always |
+But it is not free, and the honest number matters more than a good headline.
 
-Most people starting out pay **nothing**. The first thing that usually costs
-money is video, and only if you want it protected from being shared.
+| | A few hundred students | Thousands |
+|---|---|---|
+| This software | **$0** | **$0** |
+| Hosting — Vercel Pro | $20/month | $20/month |
+| Your coding agent | whatever you already pay | same |
+| Database — Neon | **$0** | $5–20/month |
+| Emails | **$0** | $20/month |
+| Video | **$0** on YouTube, or from $12/month somewhere private | same |
+| **Realistic total** | **$20/month, plus your agent** | **$45–65/month, plus your agent** |
 
-Every figure the documentation quotes is in [`docs/pricing`](./docs/pricing/README.md)
-with the date it was checked, because prices move and a confident wrong number is
-worse than none.
+So the pitch is not "free". It is: **pay for Vercel and your coding agent, and
+nothing else** — no platform fee, no per-student charge, no percentage of your
+sales, and no company that can change those terms later.
+
+### The coding agent
+
+This template is built to be worked on by an AI coding agent rather than by you
+editing code. That agent is a real cost, and it is one most people reading this
+already pay for. Prices differ by provider and change often, so this document
+does not quote one.
+
+You do not need an agent to *run* the platform — once it is deployed it just
+runs. You need one to set it up and to change things later.
+
+### Why hosting is not free
+
+Vercel's free Hobby plan is **for non-commercial use only**, and their rules
+count "advertising the sale of a product or service" as commercial. Selling
+courses is exactly that, so a course platform needs **Vercel Pro at $20/month**.
+
+Plenty of guides will tell you to deploy on the free plan. If you do, you are
+relying on nobody noticing — and the penalty is not a surprise bill, it is your
+site being paused, with your students locked out of something they paid for.
+That is worse than $20.
+
+Everything else genuinely is free until you are selling enough that it is not
+the problem. And the platform **tells you before a free plan runs out**, rather
+than letting your site stop and leaving you to work out why.
+
+For comparison, hosted course platforms start around $150/month and take a
+percentage.
+
+Every figure quoted anywhere in these documents is listed in
+[`docs/pricing`](./docs/pricing/README.md) with the date it was checked, because
+prices move and a confident wrong number is worse than none.
 
 ## What it does
 
