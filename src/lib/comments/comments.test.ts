@@ -23,7 +23,7 @@ let other: string
 
 const config = (over: Partial<CourseConfig['comments']> = {}, courseOver = {}) =>
   ({
-    comments: { enabled: true, requireApproval: true, allowReplies: true, ...over },
+    comments: { enabled: true, requireApproval: false, allowReplies: true, ...over },
     courses: [
       {
         id: 'flagship',
@@ -63,20 +63,29 @@ const post = (body: string, accountId = student, parentId?: string) =>
     ...(parentId ? { parentId } : {}),
   })
 
-describe('posting a comment', () => {
-  it('waits for approval by default', async () => {
-    const result = await post('This lesson was great')
-    expect(result).toMatchObject({ ok: true, state: 'pending' })
+/** For the cases that need a comment sitting in the queue. */
+const postPending = (body: string, accountId = student) =>
+  postComment(client, config({ requireApproval: true }), {
+    accountId,
+    courseId: 'flagship',
+    lessonId: 'welcome',
+    body,
   })
 
-  it('publishes straight away when the owner has switched approval off', async () => {
-    const result = await postComment(client, config({ requireApproval: false }), {
+describe('posting a comment', () => {
+  it('appears straight away', async () => {
+    const result = await post('This lesson was great')
+    expect(result).toMatchObject({ ok: true, state: 'published' })
+  })
+
+  it('waits when the owner has asked to approve everything', async () => {
+    const result = await postComment(client, config({ requireApproval: true }), {
       accountId: student,
       courseId: 'flagship',
       lessonId: 'welcome',
-      body: 'Straight up',
+      body: 'Held back',
     })
-    expect(result).toMatchObject({ ok: true, state: 'published' })
+    expect(result).toMatchObject({ ok: true, state: 'pending' })
   })
 
   it('refuses an empty comment', async () => {
@@ -157,20 +166,20 @@ describe('who can see what', () => {
   const asOwner = () => ({ accountId: other, isOwner: true })
 
   it('hides a pending comment from everybody else', async () => {
-    await post('Waiting for approval')
+    await postPending('Waiting for approval')
     expect(await lessonComments(client, 'flagship', 'welcome', asOther())).toHaveLength(0)
   })
 
   it('shows a student their own comment while it waits', async () => {
     // Otherwise it looks like it vanished and they post it again.
-    await post('Waiting for approval')
+    await postPending('Waiting for approval')
     const mine = await lessonComments(client, 'flagship', 'welcome', asStudent())
     expect(mine).toHaveLength(1)
     expect(mine[0]?.state).toBe('pending')
   })
 
   it('shows the owner everything waiting', async () => {
-    await post('Waiting for approval')
+    await postPending('Waiting for approval')
     expect(await lessonComments(client, 'flagship', 'welcome', asOwner())).toHaveLength(1)
   })
 
@@ -200,13 +209,13 @@ describe('who can see what', () => {
 
 describe('the moderation queue', () => {
   it('counts what is waiting', async () => {
-    await post('One')
-    await post('Two', other)
+    await postPending('One')
+    await postPending('Two', other)
     expect(await countPending(client)).toBe(2)
   })
 
   it('empties as things are approved', async () => {
-    const posted = await post('One')
+    const posted = await postPending('One')
     if (!posted.ok) throw new Error('setup failed')
     await moderateComment(client, posted.id, 'publish')
     expect(await countPending(client)).toBe(0)
@@ -214,7 +223,7 @@ describe('the moderation queue', () => {
   })
 
   it('carries the author so the owner knows who wrote it', async () => {
-    await post('One')
+    await postPending('One')
     expect((await pendingComments(client))[0]?.authorEmail).toBe('student@b.com')
   })
 })
@@ -244,7 +253,19 @@ describe('per-course settings', () => {
   })
 
   it('fall back to the site default for a course that says nothing', () => {
-    expect(commentSettings(config(), 'flagship').requireApproval).toBe(true)
+    expect(commentSettings(config({ requireApproval: true }), 'flagship').requireApproval).toBe(
+      true,
+    )
+    expect(commentSettings(config(), 'flagship').requireApproval).toBe(false)
+  })
+
+  it('let one course hold comments for approval while the rest do not', () => {
+    const settings = commentSettings(
+      config({}, { comments: { requireApproval: true } }),
+      'flagship',
+    )
+    expect(settings.requireApproval).toBe(true)
+    expect(settings.enabled).toBe(true)
   })
 })
 

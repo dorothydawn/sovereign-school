@@ -22,16 +22,22 @@ community:
   analytics, and it arrives in words rather than numbers.
 - **Students answer each other.** Some support burden handles itself.
 
-## The cost, honestly
+## Comments appear straight away
 
-The visible part — a box and a list — is a small share of the work. The rest is
-moderation, spam, deletion requests, and notifying the owner that something is
-waiting. That is why `requireApproval` defaults to **on**: an unmoderated comment
-box under every lesson of a course with a large audience is a liability, and the
-owner is the one it lands on.
+`requireApproval` ships **off**. A comment posts, and the owner removes anything
+they do not want.
 
-An owner who finds approval a chore can switch it off and moderate after the
-fact. That is a better order to discover the trade-off in than the reverse.
+The first version of this defaulted to on, reasoning that an unmoderated comment
+box under a course with a large audience is a liability. The owner overruled it,
+and on reflection they are right: a queue only works if somebody watches it, and
+most people do not. A comment held for checking usually stays held, and a
+conversation that only happens once it is approved mostly does not happen — which
+loses exactly the testimonials and signal the feature is here for.
+
+Approval is one line in `course.config.ts` for an owner who wants it, and the
+remove action is there regardless. The cost of the wrong default is asymmetric:
+switching approval on after an unpleasant comment is a minute's work, while
+never discovering that the queue killed the conversation is invisible.
 
 ## What is deliberately not here
 

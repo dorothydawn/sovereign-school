@@ -44,3 +44,11 @@ describe('alerts', () => {
     if (watching) expect(courseConfig.alerts.thresholds.length).toBeGreaterThan(0)
   })
 })
+
+describe('comments', () => {
+  it('ship on, and appear without waiting for approval', () => {
+    // A queue only works if somebody watches it, and most owners will not.
+    expect(courseConfig.comments.enabled).toBe(true)
+    expect(courseConfig.comments.requireApproval).toBe(false)
+  })
+})

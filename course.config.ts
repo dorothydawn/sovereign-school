@@ -66,13 +66,16 @@ export const courseConfig: CourseConfig = {
    * which lesson landed, and what they write is often the most honest
    * testimonial you will ever get.
    *
-   * `requireApproval: true` means nothing appears until you have seen it. Start
-   * there. If keeping up becomes a chore, switch it off — you can still delete
-   * anything after the fact.
+   * They appear straight away. A comment held back for checking usually stays
+   * held back — most people do not watch a queue — and a conversation that only
+   * happens once you approve it mostly does not happen.
+   *
+   * Set `requireApproval: true` if you would rather see everything first. You
+   * can remove any comment at any time either way.
    */
   comments: {
     enabled: true,
-    requireApproval: true,
+    requireApproval: false,
     allowReplies: true,
   },
 

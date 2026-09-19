@@ -91,8 +91,10 @@ export interface CommentsConfig {
    */
   enabled: boolean
   /**
-   * When true, a comment is hidden until you approve it in the owner dashboard.
-   * When false, comments appear immediately and you moderate after the fact.
+   * When true, a comment is hidden until you approve it on your owner page.
+   *
+   * Off by default: comments appear straight away and you remove anything you
+   * do not want. A queue only works if somebody watches it.
    */
   requireApproval: boolean
   /** Let students reply to each other, not just post top-level comments. */
