@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db/client'
 import { claim } from '@/lib/auth/claim'
-import { SESSION_COOKIE, sessionCookieOptions } from '@/lib/auth/session'
+import { SESSION_COOKIE, resolveSession, sessionCookieOptions } from '@/lib/auth/session'
 import { isSameOrigin } from '@/lib/http/same-origin'
 import { redirectTo } from '@/lib/http/redirect'
+import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,9 +25,24 @@ export async function POST(request: Request): Promise<Response> {
     return redirectTo(request, '/claim/problem?reason=unknown')
   }
 
-  const result = await claim(getDb(), token)
+  const db = getDb()
+
+  // If they are already signed in as the student this purchase belongs to, the
+  // link works straight away — a repeat buyer should not be asked to prove an
+  // address they are plainly already using.
+  const store = await cookies()
+  const existing = await resolveSession(db, store.get(SESSION_COOKIE)?.value)
+
+  const result = await claim(db, token, existing?.accountId)
 
   if (!result.ok) {
+    if (result.reason === 'sign-in-required') {
+      // The course is already on their account. They just have to prove the
+      // address, which stops somebody buying with another student's email and
+      // walking into their account.
+      return redirectTo(request, '/signin?added=1')
+    }
+
     // 'already-used' is worth telling the student, because the fix is different:
     // they are probably already signed in, or signed in on another device.
     return redirectTo(request, `/claim/problem?reason=${result.reason}`)

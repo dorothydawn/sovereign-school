@@ -122,24 +122,49 @@ describe('claiming a purchase', () => {
 describe('buying more than one course', () => {
   it('puts both courses behind the same login', async () => {
     const first = await enrol(client, config, payload())
+    const a = await claim(client, first.claimToken!)
+    if (!a.ok) throw new Error('first claim should have succeeded')
+
+    // The second purchase attaches to the same student at the moment it is
+    // made, so it is there before any link is opened.
+    await enrol(client, config, payload({ orderId: 'ord_2', productIds: ['bonus-course'] }))
+
+    expect(await count('accounts')).toBe(1)
+    expect((await accessibleCourseIds(client, a.accountId)).sort()).toEqual([
+      'bonus',
+      'flagship',
+    ])
+  })
+
+  it('will not let the second link sign anybody in on its own', async () => {
+    // The account already existed, so holding this link proves nothing about
+    // owning the address. See takeover.test.ts.
+    const first = await enrol(client, config, payload())
+    await claim(client, first.claimToken!)
     const second = await enrol(
       client,
       config,
       payload({ orderId: 'ord_2', productIds: ['bonus-course'] }),
     )
 
-    const a = await claim(client, first.claimToken!)
-    const b = await claim(client, second.claimToken!)
-    if (!a.ok || !b.ok) throw new Error('claims should have succeeded')
+    const result = await claim(client, second.claimToken!)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.reason).toBe('sign-in-required')
+  })
 
-    // Same email, so the same account — everything they own in one place.
-    expect(b.accountId).toBe(a.accountId)
-    expect(b.newAccount).toBe(false)
-    expect(await count('accounts')).toBe(1)
-    expect((await accessibleCourseIds(client, a.accountId)).sort()).toEqual([
-      'bonus',
-      'flagship',
-    ])
+  it('does let the second link through for somebody already signed in as them', async () => {
+    const first = await enrol(client, config, payload())
+    const a = await claim(client, first.claimToken!)
+    if (!a.ok) throw new Error('first claim should have succeeded')
+
+    const second = await enrol(
+      client,
+      config,
+      payload({ orderId: 'ord_2', productIds: ['bonus-course'] }),
+    )
+    const result = await claim(client, second.claimToken!, a.accountId)
+    expect(result.ok).toBe(true)
   })
 
   it('keeps separate students separate', async () => {

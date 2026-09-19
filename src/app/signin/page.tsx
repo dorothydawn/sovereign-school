@@ -10,9 +10,9 @@ const PROBLEMS: Record<string, string> = {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; problem?: string }>
+  searchParams: Promise<{ sent?: string; problem?: string; added?: string }>
 }) {
-  const { sent, problem } = await searchParams
+  const { sent, problem, added } = await searchParams
   const message = problem ? PROBLEMS[problem] : undefined
 
   return (
@@ -20,6 +20,17 @@ export default async function SignInPage({
       <h1>Sign in to {courseConfig.site.name}</h1>
 
       {message && <p role="alert">{message}</p>}
+
+      {added && (
+        // They have just bought something on an address that already has an
+        // account. The purchase is safely on it; they only need to prove the
+        // address, which is what stops somebody buying with another student's
+        // email to get into their account.
+        <p role="status" className="notice">
+          <strong>Your new course has been added to your account.</strong> Sign in
+          below with the email address you bought with and it will be there.
+        </p>
+      )}
 
       {sent && (
         // Deliberately not "we sent you an email": that would confirm whether

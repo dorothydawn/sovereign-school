@@ -24,7 +24,12 @@ interface UnmappedRow {
  * purchases that unlocked nothing, and whether a free tier is about to stop
  * the site working.
  */
-export default async function OwnerPage() {
+export default async function OwnerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ changed?: string; problem?: string }>
+}) {
+  const { changed, problem } = await searchParams
   const store = await cookies()
   const db = getDb()
 
@@ -49,8 +54,14 @@ export default async function OwnerPage() {
   const emailsToday = await sentToday(db)
   const emailCap = FREE_TIER_DAILY_CAP[courseConfig.email.provider]
 
-  const students = await db.rows<{ c: number }>(
-    `SELECT count(DISTINCT account_id)::int AS c FROM enrolments WHERE account_id IS NOT NULL`,
+  const students = await db.rows<{ id: string; email: string | null; courses: number }>(
+    `SELECT a.id, a.email, count(DISTINCT ca.course_id)::int AS courses
+       FROM accounts a
+       JOIN enrolments e ON e.account_id = a.id
+       LEFT JOIN course_access ca ON ca.enrolment_id = e.id AND ca.state = 'active'
+      GROUP BY a.id, a.email
+      ORDER BY a.created_at DESC
+      LIMIT 100`,
   )
 
   return (
@@ -59,6 +70,18 @@ export default async function OwnerPage() {
         <Link href="/">← Back to the courses</Link>
       </p>
       <h1>Things to look at</h1>
+
+      {changed && (
+        <p role="status" className="notice">
+          Changed to <strong>{changed}</strong>. They can sign in with it now, and
+          everything they bought is still there.
+        </p>
+      )}
+      {problem && (
+        <p role="alert" className="notice">
+          {problem}
+        </p>
+      )}
       <p className="muted">Signed in as the owner ({ownerEmail()}).</p>
 
       <section>
@@ -122,9 +145,46 @@ export default async function OwnerPage() {
       </section>
 
       <section>
+        <h2>Students</h2>
+        <p className="muted">
+          If somebody mistyped their address at checkout they cannot sign in. Correct
+          it here — everything they bought stays with them, and nothing needs
+          re-sending.
+        </p>
+        {students.length === 0 ? (
+          <p className="muted">Nobody has bought anything yet.</p>
+        ) : (
+          <ul className="student-list">
+            {students.map((student) => (
+              <li key={student.id}>
+                <form method="post" action="/api/students">
+                  <input type="hidden" name="accountId" value={student.id} />
+                  <label htmlFor={`email-${student.id}`} className="visually-hidden">
+                    Email address for this student
+                  </label>
+                  <input
+                    id={`email-${student.id}`}
+                    name="email"
+                    type="email"
+                    defaultValue={student.email ?? ''}
+                    placeholder="no email on file"
+                    required
+                  />
+                  <button type="submit">Save</button>
+                  <span className="muted">
+                    {student.courses} course{student.courses === 1 ? '' : 's'}
+                  </span>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
         <h2>Running costs</h2>
         <ul>
-          <li>{students[0]?.c ?? 0} students with access</li>
+          <li>{students.length} students</li>
           <li>
             Database: roughly {usage.percentOfFree}% of the free monthly allowance
             used ({usage.estimatedCuHours.toFixed(1)} of {FREE_CU_HOURS} compute-hours,{' '}

@@ -5,6 +5,12 @@ import { createSession } from './session'
 
 export type ClaimResult =
   | { ok: true; accountId: string; sessionToken: string; newAccount: boolean }
+  /**
+   * The purchase is attached to an account that already existed. Whoever is
+   * holding this link has not proved they own that address, so they are sent to
+   * sign in. Nothing is lost — the course is already on the account.
+   */
+  | { ok: false; reason: 'sign-in-required'; email: string | null }
   | { ok: false; reason: 'unknown' | 'already-used' | 'expired' }
 
 /**
@@ -13,7 +19,12 @@ export type ClaimResult =
  * This is the only route in for somebody who bought without an email address,
  * so it is the identity bridge rather than a convenience.
  */
-export async function claim(db: SqlClient, token: string): Promise<ClaimResult> {
+export async function claim(
+  db: SqlClient,
+  token: string,
+  /** The account the caller is already signed in as, if any. */
+  currentAccountId?: string | undefined,
+): Promise<ClaimResult> {
   const tokenHash = hashToken(token)
 
   // Marking the token used and reading it are one statement on purpose. Two
@@ -42,12 +53,31 @@ export async function claim(db: SqlClient, token: string): Promise<ClaimResult> 
     return { ok: false, reason: found.used_at ? 'already-used' : 'expired' }
   }
 
-  const enrolments = await db.rows<{ email: string | null; account_id: string | null }>(
-    `SELECT email, account_id FROM enrolments WHERE id = $1`,
-    [row.enrolment_id],
-  )
+  const enrolments = await db.rows<{
+    email: string | null
+    account_id: string | null
+    created_account: boolean
+  }>(`SELECT email, account_id, created_account FROM enrolments WHERE id = $1`, [
+    row.enrolment_id,
+  ])
   const enrolment = enrolments[0]
   if (!enrolment) throw new Error(`Claim token pointed at missing enrolment ${row.enrolment_id}`)
+
+  // Attached at purchase when an email identified the student. A link for such
+  // a purchase may only sign somebody in if this purchase is what created the
+  // account — otherwise buying a course with another student's address would be
+  // a way into their account, and the funnel hands the link to whoever paid.
+  if (enrolment.account_id) {
+    if (enrolment.created_account || enrolment.account_id === currentAccountId) {
+      return {
+        ok: true,
+        accountId: enrolment.account_id,
+        sessionToken: await createSession(db, enrolment.account_id),
+        newAccount: enrolment.created_account,
+      }
+    }
+    return { ok: false, reason: 'sign-in-required', email: enrolment.email }
+  }
 
   let accountId = enrolment.account_id
   let newAccount = false

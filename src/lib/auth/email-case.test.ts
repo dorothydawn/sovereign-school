@@ -68,11 +68,12 @@ describe('an address that arrives with capitals in it', () => {
     const first = await enrol(client, config, buy('Student@Example.com', 'ord_1'))
     const second = await enrol(client, config, buy('student@example.com', 'ord_2'))
 
-    const a = await claim(client, first.claimToken!)
-    const b = await claim(client, second.claimToken!)
-    if (!a.ok || !b.ok) throw new Error('claims failed')
+    expect(second.accountId).toBe(first.accountId)
 
-    expect(b.accountId).toBe(a.accountId)
+    const accounts = await client.rows<{ c: number }>(
+      `SELECT count(*)::int AS c FROM accounts`,
+    )
+    expect(accounts[0]?.c).toBe(1)
   })
 
   it('is normalised as soon as it is parsed', () => {

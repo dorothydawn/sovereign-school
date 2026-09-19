@@ -2,9 +2,12 @@ import type { SqlClient } from '@/lib/db/runner'
 import type { CourseConfig } from '@/config/types'
 import type { EnrolPayload } from './payload'
 import { hashToken, randomToken } from './signature'
+import { normaliseEmail } from './payload'
 
 export interface EnrolResult {
   enrolmentId: string
+  /** The student this purchase belongs to, when an email identified them. */
+  accountId: string | null
   /** True when this exact order had already been enrolled. Still a success. */
   duplicate: boolean
   /** Courses the student can now see. */
@@ -19,7 +22,21 @@ export interface EnrolResult {
   claimToken: string | null
 }
 
-const CLAIM_TOKEN_TTL_DAYS = 30
+/**
+ * How long a claim link lasts.
+ *
+ * A claim link is a bearer token: whoever holds it can use it. So it should be
+ * short — but only as short as the alternative way in allows.
+ *
+ * With an email we now create the account at purchase, so the student can sign
+ * in with their address from the moment they buy and the link is a convenience.
+ * Seven days.
+ *
+ * Without an email there is no other door. Expiring that link strands somebody
+ * who has paid, so it stays long.
+ */
+const CLAIM_TOKEN_TTL_DAYS_WITH_EMAIL = 7
+const CLAIM_TOKEN_TTL_DAYS_WITHOUT_EMAIL = 90
 
 /** Which courses a set of product ids unlocks, and which ids map to nothing. */
 export function coursesFor(config: CourseConfig, productIds: readonly string[]) {
@@ -62,6 +79,29 @@ export async function enrol(
 ): Promise<EnrolResult> {
   const { grantedCourseIds, unmappedProductIds } = coursesFor(config, payload.productIds)
 
+  // Find or create the student now, rather than waiting for them to open a
+  // claim link. A repeat buyer is often already signed in and reading the
+  // course — they will never check their email for the upsell they just bought,
+  // so it has to appear on its own.
+  //
+  // Also records whether this purchase is what created the account, because a
+  // claim link must not grant a session on an account that already existed.
+  let accountId: string | null = null
+  let createdAccount = false
+
+  if (payload.email) {
+    const accounts = await db.rows<{ id: string; created: boolean }>(
+      `INSERT INTO accounts (email) VALUES ($1)
+       ON CONFLICT (email) DO UPDATE SET updated_at = now()
+       RETURNING id, (xmax = 0) AS created`,
+      [normaliseEmail(payload.email)],
+    )
+    const account = accounts[0]
+    if (!account) throw new Error('Account upsert returned no row')
+    accountId = account.id
+    createdAccount = account.created
+  }
+
   // ON CONFLICT makes the insert an upsert keyed on the funnel's order id. The
   // xmax test tells us whether this row already existed: 0 means freshly
   // inserted, non-zero means the conflict path updated it.
@@ -70,11 +110,13 @@ export async function enrol(
   // platform that never takes money should not hold a third copy of it.
   const rows = await db.rows<{ id: string; existed: boolean }>(
     `INSERT INTO enrolments
-       (order_id, email, product_ids, unmapped_products, purchased_at)
-     VALUES ($1, $2, $3, $4, $5)
+       (order_id, email, product_ids, unmapped_products, purchased_at,
+        account_id, created_account)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (order_id) DO UPDATE
        SET email             = COALESCE(EXCLUDED.email, enrolments.email),
            unmapped_products = EXCLUDED.unmapped_products,
+           account_id        = COALESCE(enrolments.account_id, EXCLUDED.account_id),
            updated_at        = now()
      RETURNING id, (xmax <> 0) AS existed`,
     [
@@ -83,6 +125,8 @@ export async function enrol(
       payload.productIds,
       unmappedProductIds,
       payload.purchasedAt,
+      accountId,
+      createdAccount,
     ],
   )
 
@@ -128,13 +172,20 @@ export async function enrol(
      VALUES ($1, $2, now() + ($3 || ' days')::interval)
      ON CONFLICT (enrolment_id) WHERE used_at IS NULL DO NOTHING
      RETURNING token_hash`,
-    [hashToken(candidate), row.id, String(CLAIM_TOKEN_TTL_DAYS)],
+    [
+      hashToken(candidate),
+      row.id,
+      String(
+        payload.email ? CLAIM_TOKEN_TTL_DAYS_WITH_EMAIL : CLAIM_TOKEN_TTL_DAYS_WITHOUT_EMAIL,
+      ),
+    ],
   )
 
   const claimToken: string | null = inserted.length > 0 ? candidate : null
 
   return {
     enrolmentId: row.id,
+    accountId,
     duplicate: row.existed,
     grantedCourseIds,
     unmappedProductIds,

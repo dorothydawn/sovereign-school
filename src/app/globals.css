@@ -229,3 +229,7 @@ textarea {
 
 .reply { margin-top: 0.5rem; }
 .reply summary { cursor: pointer; font-size: 0.9rem; color: var(--accent); min-height: 44px; display: flex; align-items: center; }
+
+.student-list { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+.student-list form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.student-list input { margin: 0; flex: 1 1 16rem; }

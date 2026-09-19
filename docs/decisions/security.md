@@ -68,6 +68,34 @@ resolve-and-compare-origin check.
 `package.json` and imported nowhere. Removed. `postcss` is pinned forward past
 its advisories with an override.
 
+## An account takeover, found by a question from the funnel side
+
+The funnel's agent asked us to confirm that a repeat buyer lands in one account.
+Checking that turned up something worse.
+
+A claim link could sign somebody into an account that already existed. The
+funnel shows that link to **whoever paid**, so the attack was: buy the cheapest
+course, type another student's address at checkout, open the link you are handed,
+and you are signed in as them with access to everything they own. No access to
+the victim's inbox at any point. Confirmed against a running server before it was
+fixed.
+
+The cause was that account lookup happened at claim time and merged by email,
+treating "I bought something with this address" as proof of owning it. It is not.
+
+Now the account is found or created at **purchase**, and a claim link grants a
+session only when that purchase created the account — or when the person holding
+it is already signed in as that student. Otherwise the course is attached and
+they are sent to sign in, which is the only thing that proves the address.
+
+This also fixed a plain bug in the same place: a second purchase did not reach
+the student until they opened its own claim link, so an upsell bought minutes
+after the main course simply did not appear.
+
+Re-run after the fix: the attacker gets no session, is redirected to sign-in, and
+the victim's account is untouched. A signed-in student's upsell now appears with
+no link opened at all.
+
 ## Two lessons worth keeping
 
 **Do not compare against `request.url`.** Next rewrites it to `localhost`, so an

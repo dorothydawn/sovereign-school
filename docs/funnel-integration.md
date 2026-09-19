@@ -119,10 +119,10 @@ to repeats. If you confirm payments from two racing sources — a Stripe webhook
 and the customer's browser returning, say — let both call. That is the design.
 
 **2. Send the email whenever you have one.**
-It is optional, and the platform works without it. But a student with no email
-on file can only ever get in through the claim link. With an email they can
-request a fresh sign-in link from any device, forever. Stripe Checkout collects
-one for receipts, so you usually have it. **Send it.**
+It is optional in the contract and the platform works without it, but with one
+the buyer gets an account at the moment of purchase and can sign in from any
+device, forever. Without one, the claim link is the only door they will ever
+have. **Send it.**
 
 **3. Your product ids must match the platform's config.**
 The platform maps `productIds` to courses in its `course.config.ts`. If you send
@@ -148,6 +148,84 @@ error. From their side nothing has gone wrong.
 3. If it failed, say the same thing and make sure somebody is alerted. Do not
    tell a paying customer that something went wrong with their purchase when the
    payment itself succeeded.
+
+## One student, many orders
+
+**Confirmed, and it now happens at purchase rather than at claim.**
+
+When a call arrives with an email, the platform finds or creates the account for
+that address immediately and attaches the order to it. A repeat buyer's second
+course is in their library before they open anything — which matters for your
+upsell case, because somebody three minutes into the main course is not going
+back to their inbox.
+
+What happens in the awkward cases:
+
+| Situation | What happens |
+|---|---|
+| Same email, second order | Attaches to the same account. One student, both courses |
+| Same email, different capitals | Same account. Addresses are normalised and the database enforces it |
+| Earlier order had no email, later one does | The later order creates or finds the account by that email. The earlier one stays on its own account until somebody claims it |
+| Different email | A different student, by definition. Use the email-correction tool below if it was a typo |
+
+Enrolment is still keyed on `orderId`, exactly as you say it should be. The email
+identifies the person; the order identifies the purchase.
+
+### One important consequence for your thank-you page
+
+A claim link now signs somebody in **only if that purchase created the account.**
+
+If the address already had an account, the link attaches the course and sends
+them to sign in instead. That is not friction for its own sake: your thank-you
+page shows the claim link to whoever paid, so a link that could open an existing
+account would let anybody buy the cheapest course with another student's address
+and walk into their account. That was live until your message prompted a check.
+
+So a repeat buyer may land on `/signin` with "your new course has been added".
+If they are already signed in as that student, the link just works.
+
+## Correcting a mistyped address
+
+**Added.** The owner can change the address on a student from their own page.
+Access follows the account rather than the address, so enrolments are untouched
+and nothing needs re-sending. Any unused sign-in link issued to the old address
+is invalidated, since whoever received the mistyped mail should not keep a way
+in.
+
+The address on the order itself is left alone — it is the record of what you
+sent, and rewriting it would make our two systems disagree about the same order.
+
+So a typo is now a thirty-second fix rather than an unresolvable ticket.
+
+## Answers to your two questions
+
+### A. Yes, the claim link expires — and it depends on the email
+
+- **With an email: seven days.** It can be short precisely because the account
+  now exists from the moment of purchase, so the buyer can sign in with their
+  address immediately. The link is a convenience, not the door.
+- **Without an email: ninety days.** There is no other way in, and expiring it
+  would strand somebody who has paid.
+
+Your receipt can say the link is good for a week, and that they can always sign
+in with the address they bought with.
+
+### B. Do not put the claim link in your receipt, and do not wait for us
+
+Send your receipt whenever suits you, with no dependency on our response.
+
+Because the account exists from the moment you call us, the durable instruction
+is better than the link anyway:
+
+> Sign in at https://<the course platform>/signin with the address you used here.
+
+That works immediately, works forever, works on any device, and survives the
+claim link expiring. It also means your receipt is not carrying a bearer token
+into somebody's inbox.
+
+Keep the claim link where it already is — your thank-you page — as the one-click
+path for somebody who is still sitting there. Best of both, and no coupling
+between your email and our enrolment.
 
 ## Refunds
 

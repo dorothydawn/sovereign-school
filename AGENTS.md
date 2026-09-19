@@ -133,6 +133,13 @@ while sign-in normalises to lowercase means the account is never found — and
 because the "if that address has an account, a link is on its way" message is
 deliberately identical either way, the student is locked out silently, forever.
 
+**Buying with an address does not prove you own it.** The funnel shows the claim
+link to whoever paid, so a link that could open a pre-existing account meant
+anybody could take over a student's account by buying a course with their email.
+An account is found or created at purchase; a claim link grants a session only
+when that purchase created the account. Proving an address is what sign-in is
+for.
+
 **A comment is not a lesson.** Lesson Markdown is the owner's own content and is
 rendered as HTML deliberately. A comment is a stranger's typing and is rendered
 as text, always. Never pass a comment to `dangerouslySetInnerHTML`, and never
