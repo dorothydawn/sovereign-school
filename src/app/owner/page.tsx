@@ -145,6 +145,25 @@ export default async function OwnerPage({
       </section>
 
       <section>
+        <h2>What your funnel should send</h2>
+        <p className="muted">
+          These are the exact product ids this platform recognises. Whoever builds
+          your funnel needs them character for character — a mismatch means a
+          customer pays and sees no course.
+        </p>
+        <ul>
+          {Object.entries(courseConfig.productToCourses).map(([productId, courseIds]) => (
+            <li key={productId}>
+              <code>{productId}</code> → {courseIds.join(', ')}
+              {courseIds.some((id) => !courseConfig.courses.some((c) => c.id === id)) && (
+                <strong> — points at a course that does not exist</strong>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
         <h2>Students</h2>
         <p className="muted">
           If somebody mistyped their address at checkout they cannot sign in. Correct

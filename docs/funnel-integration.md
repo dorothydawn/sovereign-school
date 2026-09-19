@@ -240,14 +240,71 @@ a refund notification carrying `orderId` and whether it was full or partial.
 
 ## Configuration both sides need
 
-| | Funnel | Platform |
-|---|---|---|
-| `FUNNEL_SHARED_SECRET` | ✅ identical value | ✅ identical value |
-| The platform's URL | ✅ needs it | — |
-| Product ids | ✅ sends them | ✅ maps them in `course.config.ts` |
+**Read this before you hardcode anything.**
 
-Generate the secret once with `openssl rand -hex 32` and paste the same value
-into both. If they differ, every call gets `401` and nobody gets enrolled.
+Both repositories are templates, sold to people who deploy their own copies. So
+every value below is **per deployment**, not per project. There is no single
+platform URL, no single set of product ids, and no single shared secret — there
+is one of each per buyer, and a buyer may well run several courses.
+
+If the funnel hardcodes any of them, the funnel stops being a template the first
+time somebody else buys it.
+
+| | Who supplies it | Where it belongs |
+|---|---|---|
+| The platform's URL | The buyer, after deploying | Funnel config or environment |
+| `FUNNEL_SHARED_SECRET` | The buyer, generated once at setup | Environment on **both** sides, identical |
+| Product ids | The buyer decides, both sides agree | Funnel config, and `productToCourses` here |
+
+The secret is generated with `openssl rand -hex 32` and pasted into both. It
+should never be committed, never pass through a chat window, and never be seen
+by whoever wrote either template — including us. If the two sides differ, every
+call returns `401` and nobody gets enrolled.
+
+### So what the funnel needs is a setup step, not a value
+
+The equivalent of this platform's `course.config.ts`: somewhere a buyer fills in
+their own platform URL and their own product ids, with the secret in their
+environment. Then the two halves connect for any buyer, not just the first one.
+
+## Checking the two halves agree
+
+Because these values are different for every deployment, getting them wrong is
+the normal failure rather than the unusual one. There is an endpoint for it.
+
+```
+POST https://<the platform>/api/enrol/check
+X-Funnel-Signature: <signed exactly like /api/enrol>
+
+{"check":true}
+```
+
+Signed the same way, writes nothing, and answers:
+
+```json
+{
+  "ok": true,
+  "platformUrl": "https://school.example",
+  "enrolUrl": "https://school.example/api/enrol",
+  "productIds": ["flagship-course"],
+  "unlocks": { "flagship-course": ["flagship"] },
+  "courses": ["flagship"]
+}
+```
+
+- A `200` means **the secret matches**. That is the thing hardest to confirm any
+  other way, since a mismatch is otherwise an indistinguishable `401`.
+- `platformUrl` is the address as this request actually reached it. Worth
+  comparing against whatever the funnel has configured.
+- `productIds` are the exact strings to send. Copy them rather than typing them.
+- A course id marked `NO SUCH COURSE` means the buyer's config points at a
+  course they have not created — a customer would pay and see nothing.
+
+Run it as the last step of connecting a deployment. It leaves no fake order
+behind, which the alternative — a test purchase — does.
+
+The buyer can also read their product ids off their own owner page, under
+**What your funnel should send**.
 
 ## Testing it end to end
 
