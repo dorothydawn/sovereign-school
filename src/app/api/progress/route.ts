@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db/client'
 import { SESSION_COOKIE, resolveSession } from '@/lib/auth/session'
 import { canAccessCourse } from '@/lib/auth/access'
 import { setCompleted, setPosition } from '@/lib/progress/progress'
+import { isSameOrigin } from '@/lib/http/same-origin'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,9 @@ export const dynamic = 'force-dynamic'
  * one revoked.
  */
 export async function POST(request: Request): Promise<Response> {
+  // Second lock alongside the SameSite cookie. See lib/http/same-origin.
+  if (!isSameOrigin(request)) return new NextResponse(null, { status: 403 })
+
   const store = await cookies()
   const db = getDb()
 

@@ -3,14 +3,20 @@ import courseConfig from '../../../../../course.config'
 import { getDb } from '@/lib/db/client'
 import { requestSignInLink } from '@/lib/auth/signin'
 import { ensureOwnerAccount } from '@/lib/auth/owner'
+import { normaliseEmail } from '@/lib/enrol/payload'
 import { signInEmail } from '@/lib/auth/emails'
 import { dailyQuotaWarning, sendEmail } from '@/lib/email/send'
+import { isSameOrigin } from '@/lib/http/same-origin'
+import { redirectTo } from '@/lib/http/redirect'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request): Promise<Response> {
+  // Second lock alongside the SameSite cookie. See lib/http/same-origin.
+  if (!isSameOrigin(request)) return new NextResponse(null, { status: 403 })
+
   if (!courseConfig.auth.magicLink) {
-    return NextResponse.redirect(new URL('/signin', courseConfig.site.url), 303)
+    return redirectTo(request, '/signin')
   }
 
   const form = await request.formData()
@@ -27,7 +33,16 @@ export async function POST(request: Request): Promise<Response> {
     const issued = await requestSignInLink(db, email)
 
     if (issued) {
-      await sendEmail(db, courseConfig, signInEmail(courseConfig, email.trim(), issued.token))
+      // Send to the normalised address, not the raw field. Nothing with a
+      // newline in it can match a stored account today — normalisation and the
+      // accounts_email_is_normalised constraint both prevent it — so this is
+      // not exploitable. But the address reaches an email header, and a header
+      // built from raw form input is one refactor away from being a problem.
+      await sendEmail(
+        db,
+        courseConfig,
+        signInEmail(courseConfig, normaliseEmail(email), issued.token),
+      )
 
       const warning = await dailyQuotaWarning(db, courseConfig)
       if (warning) {
@@ -44,5 +59,5 @@ export async function POST(request: Request): Promise<Response> {
 
   // The same answer whether or not that address has an account. Anything more
   // specific tells a stranger which of the owner's students exist.
-  return NextResponse.redirect(new URL('/signin?sent=1', courseConfig.site.url), 303)
+  return redirectTo(request, '/signin?sent=1')
 }

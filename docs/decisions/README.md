@@ -15,4 +15,5 @@ may have been overtaken, and either way you will know which.
 | [Refunds and revoking access](./refunds.md) | **Open** — built for, switched off |
 | [The enrolment endpoint](./enrolment.md) | Settled, contract fixed |
 | [Never fail silently](./never-fail-silently.md) | Settled — a requirement |
+| [Security: what is defended](./security.md) | Reviewed 2026-09-19 |
 | [Email sending is the owner's choice](../choosing-an-email-sender.md) | Settled |

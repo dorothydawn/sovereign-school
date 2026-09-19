@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import courseConfig from '../../../../course.config'
 import { getDb } from '@/lib/db/client'
 import { claim } from '@/lib/auth/claim'
 import { SESSION_COOKIE, sessionCookieOptions } from '@/lib/auth/session'
+import { isSameOrigin } from '@/lib/http/same-origin'
+import { redirectTo } from '@/lib/http/redirect'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,14 +14,14 @@ export const dynamic = 'force-dynamic'
  * be spendable by a link preview.
  */
 export async function POST(request: Request): Promise<Response> {
+  // Second lock alongside the SameSite cookie. See lib/http/same-origin.
+  if (!isSameOrigin(request)) return new NextResponse(null, { status: 403 })
+
   const form = await request.formData()
   const token = form.get('token')
 
   if (typeof token !== 'string' || token.length === 0) {
-    return NextResponse.redirect(
-      new URL('/claim/problem?reason=unknown', courseConfig.site.url),
-      303,
-    )
+    return redirectTo(request, '/claim/problem?reason=unknown')
   }
 
   const result = await claim(getDb(), token)
@@ -28,14 +29,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!result.ok) {
     // 'already-used' is worth telling the student, because the fix is different:
     // they are probably already signed in, or signed in on another device.
-    return NextResponse.redirect(
-      new URL(`/claim/problem?reason=${result.reason}`, courseConfig.site.url),
-      303,
-    )
+    return redirectTo(request, `/claim/problem?reason=${result.reason}`)
   }
 
   // 303 so the browser follows with a GET and a refresh does not re-POST.
-  const response = NextResponse.redirect(new URL('/', courseConfig.site.url), 303)
+  const response = redirectTo(request, '/')
   response.cookies.set(SESSION_COOKIE, result.sessionToken, sessionCookieOptions)
   return response
 }
