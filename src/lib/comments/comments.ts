@@ -25,6 +25,39 @@ export function commentSettings(config: CourseConfig, courseId: string): Comment
   return { ...config.comments, ...(course?.comments ?? {}) }
 }
 
+/**
+ * Stops one account flooding the comments.
+ *
+ * A comment can be 4,000 characters and a free Neon database is 500 MB, so
+ * roughly 125,000 comments fills it — and a full database stops accepting
+ * sign-ins and purchases, not just comments. The cost of doing that is one
+ * course purchase, which is not much of a deterrent.
+ *
+ * Counted straight from the comments table, including removed ones: deleting
+ * spam must not hand the spammer a fresh allowance, and it saves a table whose
+ * only job would be counting.
+ */
+async function rateLimit(
+  db: SqlClient,
+  accountId: string,
+  maxPerHour: number,
+): Promise<{ ok: false; reason: string } | null> {
+  if (!Number.isFinite(maxPerHour) || maxPerHour <= 0) return null
+
+  const rows = await db.rows<{ c: number }>(
+    `SELECT count(*)::int AS c FROM comments
+      WHERE account_id = $1 AND created_at > now() - interval '1 hour'`,
+    [accountId],
+  )
+
+  if ((rows[0]?.c ?? 0) < maxPerHour) return null
+
+  return {
+    ok: false,
+    reason: 'That is a lot of comments in a short time. Please wait a little and try again.',
+  }
+}
+
 export type PostResult =
   | { ok: true; id: string; state: 'pending' | 'published' }
   | { ok: false; reason: string }
@@ -38,10 +71,17 @@ export async function postComment(
     lessonId: string
     parentId?: string | null
     body: string
+    /** The owner is never rate-limited on their own site. */
+    isOwner?: boolean
   },
 ): Promise<PostResult> {
   const settings = commentSettings(config, input.courseId)
   if (!settings.enabled) return { ok: false, reason: 'Comments are switched off.' }
+
+  if (!input.isOwner) {
+    const limit = await rateLimit(db, input.accountId, settings.maxPerHour)
+    if (limit) return limit
+  }
 
   const body = input.body.trim()
   if (body.length === 0) return { ok: false, reason: 'Write something first.' }

@@ -77,6 +77,9 @@ export const courseConfig: CourseConfig = {
     enabled: true,
     requireApproval: false,
     allowReplies: true,
+    // Generous for a person, useless for a script. Raise it if you run a cohort
+    // course where people talk a lot.
+    maxPerHour: 20,
   },
 
   progress: {

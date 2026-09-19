@@ -46,6 +46,13 @@ describe('alerts', () => {
 })
 
 describe('comments', () => {
+  it('cap how fast one account can post', () => {
+    // Without a cap, one paid account can script enough comments to fill a
+    // free database, and a full database stops sign-ins and purchases too.
+    expect(courseConfig.comments.maxPerHour).toBeGreaterThan(0)
+    expect(courseConfig.comments.maxPerHour).toBeLessThan(200)
+  })
+
   it('ship on, and appear without waiting for approval', () => {
     // A queue only works if somebody watches it, and most owners will not.
     expect(courseConfig.comments.enabled).toBe(true)

@@ -99,6 +99,18 @@ export interface CommentsConfig {
   requireApproval: boolean
   /** Let students reply to each other, not just post top-level comments. */
   allowReplies: boolean
+  /**
+   * The most comments one student may post in an hour.
+   *
+   * This is a brake on flooding, not a rule for normal people — a chatty
+   * student on a busy lesson will not notice it. Without one, a single paid
+   * account can script enough comments to fill a free database, at which point
+   * the site stops accepting sign-ins and purchases.
+   *
+   * Raise it for a cohort course with lively discussion. The owner is never
+   * limited on their own site.
+   */
+  maxPerHour: number
 }
 
 export interface ProgressConfig {

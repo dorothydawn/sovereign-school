@@ -22,10 +22,21 @@ the code. What follows is the state as verified, including the gaps.
 
 ## Known gaps, deliberately
 
-**Comment flooding.** Nothing limits how many comments one account can post. It
-requires a paying account, so the blast radius is one customer who can be
-removed, and the owner can delete anything. Worth adding if it ever happens;
-not worth pre-building.
+**Comment flooding — closed.** This was first left open on the reasoning that
+an attacker needs a paying account, so the damage is one removable customer.
+That reasoning was wrong, and the arithmetic is why: a comment can be 4,000
+characters and a free Neon database is 500 MB, so roughly 125,000 comments fills
+it. A full database stops accepting sign-ins and purchases, not just comments.
+At one a second that is about 35 hours of scripting, and the entry price is a
+single course purchase.
+
+`comments.maxPerHour` now caps it, defaulting to 20 — generous for a person,
+useless for a script. Counted from the comments table including removed rows, so
+deleting spam does not hand the spammer a fresh allowance. The owner is never
+limited on their own site.
+
+Verified live: 30 scripted attempts produced 20 comments, the owner's 30 all
+went through, and the refused attempt explains itself.
 
 **No full Content-Security-Policy.** `script-src` needs per-request nonces
 threaded through every page, and a strict `frame-src` would break the

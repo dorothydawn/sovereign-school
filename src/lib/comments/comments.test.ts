@@ -286,3 +286,76 @@ describe('who the owner is', () => {
     expect(await isOwner(client, student)).toBe(true)
   })
 })
+
+describe('stopping one account flooding the comments', () => {
+  // Not cosmetic: a comment can be 4,000 characters, and Neon's free plan is
+  // 500 MB. Around 125,000 comments fills it, at which point the database stops
+  // accepting writes and nobody can buy, sign in or save progress. The entry
+  // price for an attacker is one course purchase.
+  const spam = async (count: number, accountId = student) => {
+    const results = []
+    for (let i = 0; i < count; i++) {
+      results.push(
+        await postComment(client, config({ maxPerHour: 5 }), {
+          accountId,
+          courseId: 'flagship',
+          lessonId: 'welcome',
+          body: `comment number ${i}`,
+        }),
+      )
+    }
+    return results
+  }
+
+  it('lets a normal number through and stops the rest', async () => {
+    const results = await spam(8)
+    expect(results.filter((r) => r.ok)).toHaveLength(5)
+    expect(results.filter((r) => !r.ok)).toHaveLength(3)
+  })
+
+  it('says why, rather than failing silently', async () => {
+    const results = await spam(6)
+    const refused = results.find((r) => !r.ok)
+    expect(refused).toBeDefined()
+    if (refused?.ok) return
+    expect(refused?.reason).toMatch(/too many|slow down|wait/i)
+  })
+
+  it('counts removed comments too, so deleting them does not reset the allowance', async () => {
+    await spam(5)
+    await client.rows(`UPDATE comments SET state = 'removed'`)
+    const after = await spam(1)
+    expect(after[0]?.ok).toBe(false)
+  })
+
+  it('does not count somebody else against your allowance', async () => {
+    await spam(5)
+    const theirs = await spam(1, other)
+    expect(theirs[0]?.ok).toBe(true)
+  })
+
+  it('lets them comment again once the hour has passed', async () => {
+    await spam(5)
+    await client.rows(`UPDATE comments SET created_at = now() - interval '2 hours'`)
+    const after = await spam(1)
+    expect(after[0]?.ok).toBe(true)
+  })
+
+  it('never limits the owner on their own site', async () => {
+    // Being rate-limited on a platform you own is infuriating and protects
+    // nobody: the owner is not the person this guards against.
+    const results = []
+    for (let i = 0; i < 8; i++) {
+      results.push(
+        await postComment(client, config({ maxPerHour: 5 }), {
+          accountId: student,
+          courseId: 'flagship',
+          lessonId: 'welcome',
+          body: `owner reply ${i}`,
+          isOwner: true,
+        }),
+      )
+    }
+    expect(results.every((r) => r.ok)).toBe(true)
+  })
+})

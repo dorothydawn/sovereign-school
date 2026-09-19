@@ -57,7 +57,8 @@ export function Comments({
       )}
       {notice === 'problem' && (
         <p role="alert" className="notice">
-          That comment could not be posted. It may have been empty or too long.
+          That comment could not be posted. It may have been empty, too long, or
+          sent very soon after your last one — wait a moment and try again.
         </p>
       )}
 

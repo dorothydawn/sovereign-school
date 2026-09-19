@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db/client'
 import { SESSION_COOKIE, resolveSession } from '@/lib/auth/session'
 import { canAccessCourse } from '@/lib/auth/access'
 import { deleteOwnComment, postComment } from '@/lib/comments/comments'
+import { isOwner } from '@/lib/auth/owner'
 import { isSameOrigin } from '@/lib/http/same-origin'
 import { redirectTo } from '@/lib/http/redirect'
 
@@ -53,6 +54,8 @@ export async function POST(request: Request): Promise<Response> {
     courseId,
     lessonId,
     body: String(form.get('body') ?? ''),
+    // The owner answering a lot of students in one sitting is not flooding.
+    isOwner: await isOwner(db, session.accountId),
     ...(typeof parentId === 'string' && parentId ? { parentId } : {}),
   })
 
