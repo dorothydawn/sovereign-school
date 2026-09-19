@@ -7,6 +7,8 @@ import { SESSION_COOKIE, resolveSession } from '@/lib/auth/session'
 import { isOwner, ownerEmail } from '@/lib/auth/owner'
 import { pendingComments } from '@/lib/comments/comments'
 import { sentToday, FREE_TIER_DAILY_CAP } from '@/lib/email/send'
+import { databaseUsage, FREE_CU_HOURS } from '@/lib/usage/database'
+import { checkFreeTierCeilings } from '@/lib/usage/notify'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +34,10 @@ export default async function OwnerPage() {
   // notFound rather than a refusal: a student should not learn this page exists.
   if (!(await isOwner(db, session.accountId))) notFound()
 
+  // The owner opening this page is as good a moment as any to check whether a
+  // free tier is about to stop the site working.
+  await checkFreeTierCeilings(db, courseConfig)
+
   const pending = await pendingComments(db, 50)
 
   const unmapped = await db.rows<UnmappedRow>(
@@ -39,6 +45,7 @@ export default async function OwnerPage() {
       WHERE unmapped_products <> '{}' ORDER BY created_at DESC LIMIT 25`,
   )
 
+  const usage = await databaseUsage(db)
   const emailsToday = await sentToday(db)
   const emailCap = FREE_TIER_DAILY_CAP[courseConfig.email.provider]
 
@@ -119,6 +126,14 @@ export default async function OwnerPage() {
         <ul>
           <li>{students[0]?.c ?? 0} students with access</li>
           <li>
+            Database: roughly {usage.percentOfFree}% of the free monthly allowance
+            used ({usage.estimatedCuHours.toFixed(1)} of {FREE_CU_HOURS} compute-hours,{' '}
+            {usage.awakeHours.toFixed(1)} hours awake)
+            {usage.percentOfFree >= 70 && (
+              <strong> — at 100% Neon suspends the database until next month.</strong>
+            )}
+          </li>
+          <li>
             {emailsToday} of roughly {emailCap ?? '∞'} emails sent today
             {emailCap ? ' on a free plan' : ''}
             {emailCap && emailsToday >= emailCap * 0.7 && (
@@ -129,6 +144,11 @@ export default async function OwnerPage() {
             )}
           </li>
         </ul>
+        <p className="muted">
+          The database figure is an estimate. Neon does not report real usage on the
+          free plan, so this measures how long the database stays awake and works
+          backwards, erring on the cautious side.
+        </p>
         <p className="muted">
           See <code>docs/choosing-an-email-sender.md</code> and{' '}
           <code>docs/choosing-a-neon-plan.md</code> if either of these is getting tight.

@@ -1,5 +1,6 @@
 import type { SqlClient } from '@/lib/db/runner'
 import { hashToken, randomToken } from '@/lib/enrol/signature'
+import { recordActivity } from '@/lib/usage/database'
 
 /** How long a student stays signed in. Long: this is a course, not a bank. */
 const SESSION_TTL_DAYS = 90
@@ -29,6 +30,12 @@ export async function createSession(db: SqlClient, accountId: string): Promise<s
 /** Returns the session's account, or null if the token is unknown or expired. */
 export async function resolveSession(db: SqlClient, token: string | undefined): Promise<Session | null> {
   if (!token) return null
+
+  // Every signed-in request passes through here, which makes it the honest
+  // place to measure how much of the month the database spends awake. Skipped
+  // when this process has already recorded the current five-minute window, so
+  // it usually costs nothing.
+  await recordActivity(db).catch(() => {})
 
   const rows = await db.rows<{ account_id: string }>(
     `SELECT account_id FROM sessions WHERE token_hash = $1 AND expires_at > now()`,

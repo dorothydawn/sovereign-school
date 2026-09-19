@@ -44,6 +44,29 @@ pruned monthly. The cost of measuring is far below what it measures.
 On a paid plan, read the real figure from Neon's API and use the estimate only as
 a fallback.
 
+## Built, and where it lives
+
+`src/lib/usage/database.ts` measures and `src/lib/usage/notify.ts` warns.
+Activity is recorded in `resolveSession`, which every signed-in request passes
+through, and skipped when this process has already recorded the current
+five-minute window — so it usually costs nothing at all.
+
+The check runs when the owner opens their page rather than on a schedule. A
+buyer should not have to configure cron to find out their site is about to
+switch off.
+
+`alerts_sent` keys a warning by kind, threshold and month, and the insert is the
+claim: whoever wins sends the message, so two simultaneous requests cannot both
+email. Crossing 70% is one piece of news and 90% is another, and next month
+starts again.
+
+`checkFreeTierCeilings` never throws. It runs inside page loads, and a failure
+to warn must not be the thing that takes the course offline.
+
+Confirmed against a real database: five page loads in one window recorded one
+bucket; at 75% the owner's page warned and a single alert row appeared; three
+reloads added nothing; pushing to 92% produced a second warning and no more.
+
 ## Honesty about the estimate
 
 The dashboard must say it is an estimate, and that it cannot see Neon's meter on
