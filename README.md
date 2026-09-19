@@ -36,9 +36,12 @@ sales, and no company that can change those terms later.
 ### The coding agent
 
 This template is built to be worked on by an AI coding agent rather than by you
-editing code. That agent is a real cost, and it is one most people reading this
-already pay for. Prices differ by provider and change often, so this document
-does not quote one.
+editing code. That agent is a real cost — but if you are the kind of person
+buying this, you almost certainly pay for one already, so in practice it is not
+a new line on your bill. It is listed because it is honest to list it, not
+because you are likely to be adding it.
+
+Prices differ by provider and change often, so this document does not quote one.
 
 You do not need an agent to *run* the platform — once it is deployed it just
 runs. You need one to set it up and to change things later.
