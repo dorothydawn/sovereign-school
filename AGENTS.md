@@ -54,6 +54,7 @@ When you genuinely need something new, say what it costs before you add it.
 | `docs/` | Written for the owner. Plain English, no jargon |
 | `docs/decisions/` | Why things are the way they are. Read before changing an architectural choice |
 | `docs/pricing/` | Every price quoted anywhere, with the date it was checked |
+| `docs/funnel-integration.md` | The whole contract, for whoever builds the selling side |
 | `migrations/` | Plain SQL, applied in filename order |
 | `src/lib/db/` | The migration runner and the database client |
 | `src/lib/enrol/` | The funnel's call, and reconciling purchases the config did not map |
@@ -106,7 +107,7 @@ it. An origin check written against it rejects every legitimate request — it d
 here, and only a live test caught it. The real host is in `Host`, or
 `X-Forwarded-Host` behind a proxy. See `src/lib/http/same-origin.ts`.
 
-**Do not build redirects from `courseConfig.site.url`.** It is typed in by hand
+**Do not build anything a customer will click from `courseConfig.site.url`.** It is typed in by hand
 at setup. If it is wrong or still the placeholder, every form submission sends
 students to somebody else's website with nothing explaining why. Use
 `redirectTo()` from `src/lib/http/redirect.ts`, which uses the request's own

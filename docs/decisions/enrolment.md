@@ -2,6 +2,9 @@
 
 **Status: settled.** The contract is fixed and shared with the funnel repo.
 
+> **Building the funnel side?** `docs/funnel-integration.md` has everything you
+> need, including a signing test vector.
+
 ## The situation
 
 One HTTP POST arrives from the funnel when somebody buys. By the time it arrives,

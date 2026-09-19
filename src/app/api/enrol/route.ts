@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db/client'
 import { enrol } from '@/lib/enrol/enrol'
 import { parseEnrolPayload } from '@/lib/enrol/payload'
 import { verifySignature } from '@/lib/enrol/signature'
+import { siteUrlFor } from '@/lib/http/site-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,9 +71,12 @@ export async function POST(request: Request): Promise<Response> {
         duplicate: result.duplicate,
         courses: result.grantedCourseIds,
         unmappedProducts: result.unmappedProductIds,
-        // Null on a repeat delivery: the first link is already with the customer.
+        // Built from the address the funnel actually called, not from
+        // site.url: that value is hand-typed at setup, and a typo there would
+        // send every paying customer a dead link into their course.
+        // Null on a repeat delivery: the first link is already with them.
         claimUrl: result.claimToken
-          ? `${courseConfig.site.url}/claim/${result.claimToken}`
+          ? `${siteUrlFor(request, courseConfig.site.url)}/claim/${result.claimToken}`
           : null,
       },
       { status: 200 },
